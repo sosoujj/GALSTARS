@@ -1,0 +1,95 @@
+/* Paleta de Colores */
+:root {
+    --color-fondo-claro: #F7E8EE; /* Rosa Claro */
+    --color-rosa-fuerte: #FF007F; /* Magenta/Rosa Fuerte */
+    --color-marron: #5D4037; /* Marrón Chocolate */
+    --color-morado-suave: #A88EB0; /* Morado Suave */
+    --color-texto-claro: white;
+}
+
+body {
+    font-family: sans-serif;
+    background-color: var(--color-fondo-claro);
+    color: var(--color-marron);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+h1, h2 {
+    color: var(--color-marron);
+    border-bottom: 2px solid var(--color-morado-suave);
+    padding-bottom: 5px;
+}
+
+/* Estilos de Formularios y Botones */
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-morado-suave);
+    border-radius: 5px;
+    box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+}
+
+button {
+    background-color: var(--color-rosa-fuerte);
+    color: var(--color-texto-claro);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #E00070; /* Tono más oscuro de rosa */
+}
+
+/* Estilos de Listas y Tablas */
+.reservas-list, table {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #E0D0E5; /* Borde muy suave */
+    text-align: left;
+}
+
+table th {
+    background-color: var(--color-morado-suave);
+    color: var(--color-texto-claro);
+}
+
+/* Indicador de Ocupado */
+.estado-ocupado {
+    background-color: var(--color-marron);
+    color: var(--color-texto-claro);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.estado-pendiente {
+    background-color: var(--color-rosa-fuerte);
+    color: var(--color-texto-claro);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}

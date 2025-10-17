@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pide tu Turno 📅</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>🌟 Sistema de Reservas 🌟</h1>
+    
+    <h2>Pedir Nuevo Turno</h2>
+    <form id="formulario-reserva">
+        <div class="form-group">
+            <label for="nombre">Nombre Completo:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+        <div class="form-group">
+            <label for="telefono">Teléfono/Contacto:</label>
+            <input type="tel" id="telefono" name="telefono" required>
+        </div>
+        <div class="form-group">
+            <label for="fecha">Fecha Deseada:</label>
+            <input type="date" id="fecha" name="fecha" required> 
+        </div>
+        <div class="form-group">
+            <label for="hora">Hora Deseada (entre 9:00 y 18:00):</label>
+            <input type="time" id="hora" name="hora" required 
+                   min="09:00" max="18:00"> 
+        </div>
+        <button type="submit">Solicitar Turno</button>
+        <p id="mensaje-reserva"></p>
+    </form>
+    
+    <hr/>
+    
+    <h2>📅 Disponibilidad (Simulada)</h2>
+    <p>Las fechas mostradas como **Ocupadas** ya tienen un turno asignado.</p>
+    <table id="calendario-disponibilidad">
+        </table>
+
+    <script src="script.js"></script>
+    <script>
+        // Lógica específica del Usuario
+        document.addEventListener('DOMContentLoaded', () => {
+            const formulario = document.getElementById('formulario-reserva');
+            const fechaInput = document.getElementById('fecha');
+            const mensajeReserva = document.getElementById('mensaje-reserva');
+            
+            // 1. Validar que no se pueda elegir una fecha pasada (Ejemplo: ayer)
+            const hoy = new Date();
+            const fechaMinima = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            fechaInput.setAttribute('min', fechaMinima);
+
+          // 2. Manejar el envío del formulario
+            formulario.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const horaSolicitada = document.getElementById('hora').value;
+                const horaInicio = '09:00';
+                const horaFin = '18:00';
+                
+                // *** NUEVA VALIDACIÓN DE HORARIO ***
+                if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
+                    mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
+                    mensajeReserva.style.color = 'var(--color-marron)'; // Color marrón para error
+                    return; // Detiene el envío
+                }
+                // **********************************
+
+                const nuevaReserva = {
+                    nombre: document.getElementById('nombre').value,
+                    telefono: document.getElementById('telefono').value,
+                    fecha: document.getElementById('fecha').value,
+                    hora: horaSolicitada,
+                    estado: 'Pendiente' // Estado inicial
+                };
+
+                // Añade la reserva usando la función del script.js
+                agregarReserva(nuevaReserva);
+
+                formulario.reset();
+                mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
+                mensajeReserva.style.color = 'var(--color-rosa-fuerte)'; // Color magenta para éxito
+                
+                // Actualiza el calendario
+                mostrarDisponibilidad();
+            });
+
+            // 3. Cargar disponibilidad al inicio
+            mostrarDisponibilidad();
+        });
+    </script>
+</body>
+</html>

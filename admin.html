@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración 🔑</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>🔑 Panel de Administración de Reservas</h1>
+    
+    <h2>Turnos Pendientes de Aprobación</h2>
+    <div id="reservas-pendientes">
+        </div>
+    
+    <hr/>
+    
+    <h2>Turnos Confirmados</h2>
+    <table id="reservas-confirmadas">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Contacto</th>
+                <th>Fecha/Hora</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <script src="script.js"></script>
+    <script>
+        // Lógica específica del Administrador
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPanelAdmin();
+        });
+    </script>
+</body>
+</html>
