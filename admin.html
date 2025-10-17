@@ -32,35 +32,46 @@
         </table>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
+        // TU CONFIGURACIÓN DE FIREBASE (¡AJUSTA ESTO!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNQm2jgb54xKYYHk64bXO648NdWm1MZTY",
+            authDomain: "galstars-b9eed.firebaseapp.com",
+            projectId: "galstars-b9eed",
+            storageBucket: "galstars-b9eed.firebasestorage.app",
+            messagingSenderId: "711879283881",
+            appId: "1:711879283881:web:7dfcf4cdf3feb9468505b8",
+            measurementId: "G-0Q4XKYWKTQ" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
     <script src="script.js"></script>
     <script>
-        // Lógica de Autenticación Inmediata
-
-        // --- DEFINE LA CONTRASEÑA ---
-        const CORRECT_PASSWORD = '1234'; // ¡Cámbiala por una más segura!
+        // Lógica de Autenticación Inmediata y Carga del Panel
+        const CORRECT_PASSWORD = '1234'; // ¡CAMBIA ESTA CONTRASEÑA!
 
         function authenticate() {
             let password = '';
             
-            // Bucle que detiene la ejecución hasta que se ingresa la contraseña correcta o se cancela
             while (password !== CORRECT_PASSWORD) {
-                // Muestra un cuadro de diálogo nativo de JavaScript para solicitar la contraseña
-                password = prompt("🔐 INGRESA LA CONTRASEÑA DE ADMINISTRADOR para acceder:");
+                // Solicita la contraseña
+                password = prompt("🔐 INGRESA LA CONTRASEÑA DE ADMINISTRADOR:");
 
-                // Si el usuario cancela (password es null) o la contraseña es incorrecta
+                // Si cancela (password es null) o es incorrecta
                 if (password === null || password !== CORRECT_PASSWORD) {
-                    alert("Contraseña incorrecta o acceso cancelado. No puedes ver el contenido.");
-                    
-                    // Bloquea y redirige la página para evitar que el usuario vea el contenido
-                    document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta o cancelada. Cierra esta ventana y vuelve a intentarlo.</p>';
+                    alert("Contraseña incorrecta o acceso cancelado.");
+                    // Bloquea el contenido
+                    document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta. Cierra esta ventana y vuelve a intentarlo.</p>';
                     return false;
                 }
             }
-            // Si la contraseña es correcta, la ejecución continúa.
             return true;
         }
 
-        // Lógica específica del Administrador
         document.addEventListener('DOMContentLoaded', () => {
             if (authenticate()) {
                 // Solo si la autenticación es exitosa, cargamos el panel.
