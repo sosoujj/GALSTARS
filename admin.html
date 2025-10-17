@@ -7,33 +7,65 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>🔑 Panel de Administración de Reservas</h1>
     
-    <h2>Turnos Pendientes de Aprobación</h2>
-    <div id="reservas-pendientes">
-        </div>
-    
-    <hr/>
-    
-    <h2>Turnos Confirmados</h2>
-    <table id="reservas-confirmadas">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Contacto</th>
-                <th>Fecha/Hora</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
+    <div id="admin-content">
+        <h1>🔑 Panel de Administración de Reservas</h1>
+        
+        <h2>Turnos Pendientes de Aprobación</h2>
+        <div id="reservas-pendientes">
+            </div>
+        
+        <hr/>
+        
+        <h2>Turnos Confirmados</h2>
+        <table id="reservas-confirmadas">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Contacto</th>
+                    <th>Fecha/Hora</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
 
     <script src="script.js"></script>
     <script>
+        // Lógica de Autenticación Inmediata
+
+        // --- DEFINE LA CONTRASEÑA ---
+        const CORRECT_PASSWORD = '1234'; // ¡Cámbiala por una más segura!
+
+        function authenticate() {
+            let password = '';
+            
+            // Bucle que detiene la ejecución hasta que se ingresa la contraseña correcta o se cancela
+            while (password !== CORRECT_PASSWORD) {
+                // Muestra un cuadro de diálogo nativo de JavaScript para solicitar la contraseña
+                password = prompt("🔐 INGRESA LA CONTRASEÑA DE ADMINISTRADOR para acceder:");
+
+                // Si el usuario cancela (password es null) o la contraseña es incorrecta
+                if (password === null || password !== CORRECT_PASSWORD) {
+                    alert("Contraseña incorrecta o acceso cancelado. No puedes ver el contenido.");
+                    
+                    // Bloquea y redirige la página para evitar que el usuario vea el contenido
+                    document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta o cancelada. Cierra esta ventana y vuelve a intentarlo.</p>';
+                    return false;
+                }
+            }
+            // Si la contraseña es correcta, la ejecución continúa.
+            return true;
+        }
+
         // Lógica específica del Administrador
         document.addEventListener('DOMContentLoaded', () => {
-            cargarPanelAdmin();
+            if (authenticate()) {
+                // Solo si la autenticación es exitosa, cargamos el panel.
+                cargarPanelAdmin();
+            }
         });
     </script>
 </body>
