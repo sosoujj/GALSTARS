@@ -25,8 +25,7 @@
         </div>
         <div class="form-group">
             <label for="hora">Hora Deseada (entre 9:00 y 18:00):</label>
-            <input type="time" id="hora" name="hora" required 
-                   min="09:00" max="18:00"> 
+            <input type="time" id="hora" name="hora" required min="09:00" max="18:00">
         </div>
         <button type="submit">Solicitar Turno</button>
         <p id="mensaje-reserva"></p>
@@ -34,10 +33,27 @@
     
     <hr/>
     
-    <h2>📅 Disponibilidad (Simulada)</h2>
-    <p>Las fechas mostradas como **Ocupadas** ya tienen un turno asignado.</p>
+    <h2>📅 Disponibilidad Actual</h2>
+    <p>Las fechas y horas mostradas como **Ocupadas** ya tienen un turno asignado.</p>
     <table id="calendario-disponibilidad">
         </table>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
+        // TU CONFIGURACIÓN DE FIREBASE (¡AJUSTA ESTO!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNQm2jgb54xKYYHk64bXO648NdWm1MZTY",
+            authDomain: "galstars-b9eed.firebaseapp.com",
+            projectId: "galstars-b9eed",
+            storageBucket: "galstars-b9eed.firebasestorage.app",
+            messagingSenderId: "711879283881",
+            appId: "1:711879283881:web:7dfcf4cdf3feb9468505b8",
+            measurementId: "G-0Q4XKYWKTQ" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
 
     <script src="script.js"></script>
     <script>
@@ -47,12 +63,12 @@
             const fechaInput = document.getElementById('fecha');
             const mensajeReserva = document.getElementById('mensaje-reserva');
             
-            // 1. Validar que no se pueda elegir una fecha pasada (Ejemplo: ayer)
+            // 1. Validar que no se pueda elegir una fecha pasada (Ayer)
             const hoy = new Date();
-            const fechaMinima = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            const fechaMinima = hoy.toISOString().split('T')[0];
             fechaInput.setAttribute('min', fechaMinima);
 
-          // 2. Manejar el envío del formulario
+            // 2. Manejar el envío del formulario
             formulario.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
@@ -60,13 +76,12 @@
                 const horaInicio = '09:00';
                 const horaFin = '18:00';
                 
-                // *** NUEVA VALIDACIÓN DE HORARIO ***
+                // VALIDACIÓN DE HORARIO
                 if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
                     mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
-                    mensajeReserva.style.color = 'var(--color-marron)'; // Color marrón para error
-                    return; // Detiene el envío
+                    mensajeReserva.style.color = 'var(--color-marron)';
+                    return; 
                 }
-                // **********************************
 
                 const nuevaReserva = {
                     nombre: document.getElementById('nombre').value,
@@ -76,15 +91,16 @@
                     estado: 'Pendiente' // Estado inicial
                 };
 
-                // Añade la reserva usando la función del script.js
-                agregarReserva(nuevaReserva);
-
-                formulario.reset();
-                mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
-                mensajeReserva.style.color = 'var(--color-rosa-fuerte)'; // Color magenta para éxito
-                
-                // Actualiza el calendario
-                mostrarDisponibilidad();
+                // Añade la reserva a Firebase
+                agregarReserva(nuevaReserva).then(() => {
+                    formulario.reset();
+                    mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
+                    mensajeReserva.style.color = 'var(--color-rosa-fuerte)';
+                    mostrarDisponibilidad();
+                }).catch(() => {
+                    mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde.";
+                    mensajeReserva.style.color = 'red';
+                });
             });
 
             // 3. Cargar disponibilidad al inicio
