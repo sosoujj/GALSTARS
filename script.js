@@ -1,36 +1,45 @@
-const STORAGE_KEY = 'reservasSistema';
+// La variable 'db' (Firestore) se inicializa en los archivos HTML y está disponible globalmente.
 
-// --- Funciones de Gestión de Datos (Simulación de BD) ---
+// --- Funciones de Gestión de Datos (Usando Firebase Firestore) ---
 
-function obtenerReservas() {
-    const reservasJSON = localStorage.getItem(STORAGE_KEY);
-    // Si no hay reservas, devuelve un array vacío
-    return reservasJSON ? JSON.parse(reservasJSON) : [];
-}
-
-function guardarReservas(reservas) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reservas));
-}
-
+/**
+ * Agrega una nueva reserva a la colección 'reservas' en Firestore.
+ * @param {object} nuevaReserva - Los datos de la reserva.
+ */
 function agregarReserva(nuevaReserva) {
-    const reservas = obtenerReservas();
-    // Generar un ID simple
-    nuevaReserva.id = Date.now(); 
-    reservas.push(nuevaReserva);
-    guardarReservas(reservas);
+    // db.collection("reservas").add() guarda el documento
+    return db.collection("reservas").add(nuevaReserva);
 }
 
+/**
+ * Obtiene todas las reservas de la base de datos.
+ * @returns {Promise<Array<object>>} Una promesa que resuelve con un array de reservas.
+ */
+function obtenerReservas() {
+    return db.collection("reservas").get().then((querySnapshot) => {
+        const reservas = [];
+        querySnapshot.forEach((doc) => {
+            // Incluye el ID de Firebase para poder actualizar o eliminar la reserva
+            reservas.push({ id: doc.id, ...doc.data() }); 
+        });
+        return reservas;
+    });
+}
+
+/**
+ * Actualiza el estado (y opcionalmente fecha/hora) de una reserva específica por su ID de Firebase.
+ * @param {string} id - El ID del documento de Firebase.
+ * @param {string} estado - El nuevo estado ('Confirmado' o 'Pendiente').
+ * @param {string} [fecha] - Nueva fecha opcional.
+ * @param {string} [hora] - Nueva hora opcional.
+ */
 function actualizarEstadoReserva(id, estado, fecha, hora) {
-    const reservas = obtenerReservas();
-    const index = reservas.findIndex(res => res.id === id);
-    if (index !== -1) {
-        reservas[index].estado = estado;
-        if (fecha && hora) {
-            reservas[index].fecha = fecha; // Permite al dueño reasignar
-            reservas[index].hora = hora;
-        }
-        guardarReservas(reservas);
-    }
+    const data = { estado: estado };
+    if (fecha) data.fecha = fecha;
+    if (hora) data.hora = hora;
+    
+    // db.collection("reservas").doc(id).update() modifica solo los campos especificados
+    return db.collection("reservas").doc(id).update(data);
 }
 
 
@@ -38,32 +47,35 @@ function actualizarEstadoReserva(id, estado, fecha, hora) {
 
 function mostrarDisponibilidad() {
     const tabla = document.getElementById('calendario-disponibilidad');
-    if (!tabla) return; // Si no estamos en index.html, salimos
+    if (!tabla) return; 
 
-    const reservas = obtenerReservas().filter(res => res.estado === 'Confirmado');
-    tabla.innerHTML = `
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    const tbody = tabla.querySelector('tbody');
+    // Obtiene las reservas de la NUBE
+    obtenerReservas().then(reservas => {
+        const confirmadas = reservas.filter(res => res.estado === 'Confirmado');
+        
+        tabla.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const tbody = tabla.querySelector('tbody');
 
-    if (reservas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">🎉 ¡Todo el calendario está libre!</td></tr>`;
-        return;
-    }
+        if (confirmadas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">🎉 ¡Todo el calendario está libre!</td></tr>`;
+            return;
+        }
 
-    // Mostrar solo las confirmadas como "Ocupado"
-    reservas.forEach(res => {
-        const fila = tbody.insertRow();
-        fila.insertCell().textContent = res.fecha;
-        fila.insertCell().textContent = res.hora;
-        fila.insertCell().innerHTML = `<span class="estado-ocupado">OCUPADO</span>`;
+        confirmadas.forEach(res => {
+            const fila = tbody.insertRow();
+            fila.insertCell().textContent = res.fecha;
+            fila.insertCell().textContent = res.hora;
+            fila.insertCell().innerHTML = `<span class="estado-ocupado">OCUPADO</span>`;
+        });
     });
 }
 
@@ -71,86 +83,85 @@ function mostrarDisponibilidad() {
 // --- Funciones de Renderizado para el Dueño (admin.html) ---
 
 function cargarPanelAdmin() {
-    const reservas = obtenerReservas();
-    
-    // Contenedores
-    const pendientesDiv = document.getElementById('reservas-pendientes');
-    const confirmadasTbody = document.getElementById('reservas-confirmadas').querySelector('tbody');
-    
-    if (!pendientesDiv || !confirmadasTbody) return; // Si no estamos en admin.html, salimos
-
-    pendientesDiv.innerHTML = '';
-    confirmadasTbody.innerHTML = '';
-    
-    const pendientes = reservas.filter(res => res.estado === 'Pendiente');
-    const confirmadas = reservas.filter(res => res.estado === 'Confirmado');
-
-    // 1. Renderizar Pendientes (Formulario de Aprobación Rápida)
-    if (pendientes.length === 0) {
-        pendientesDiv.innerHTML = "<p>🥳 No hay turnos pendientes por aprobar.</p>";
-    } else {
-        pendientes.forEach(reserva => {
-            const card = document.createElement('div');
-            card.className = 'reservas-list';
-            card.innerHTML = `
-                <p><strong>Cliente:</strong> ${reserva.nombre}</p>
-                <p><strong>Teléfono:</strong> ${reserva.telefono}</p>
-                <p><strong>Solicita:</strong> ${reserva.fecha} a las ${reserva.hora}</p>
-                
-                <form class="form-aprobacion" data-id="${reserva.id}">
-                    <div class="form-group">
-                        <label for="fecha-${reserva.id}">Fecha (Reasignar si es necesario):</label>
-                        <input type="date" id="fecha-${reserva.id}" value="${reserva.fecha}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="hora-${reserva.id}">Hora (Reasignar si es necesario):</label>
-                        <input type="time" id="hora-${reserva.id}" value="${reserva.hora}" required>
-                    </div>
-                    <button type="submit">✅ Confirmar Turno</button>
-                    <button type="button" class="btn-rechazar" data-id="${reserva.id}" 
-                            style="background-color: var(--color-marron);">❌ Rechazar</button>
-                </form>
-            `;
-            pendientesDiv.appendChild(card);
-        });
+    // Obtiene las reservas de la NUBE
+    obtenerReservas().then(reservas => {
         
-        // Agregar Event Listeners para Confirmar/Rechazar
-        document.querySelectorAll('.form-aprobacion').forEach(form => {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = parseInt(form.getAttribute('data-id'));
-                const nuevaFecha = form.querySelector(`input[type="date"]`).value;
-                const nuevaHora = form.querySelector(`input[type="time"]`).value;
-                actualizarEstadoReserva(id, 'Confirmado', nuevaFecha, nuevaHora);
-                cargarPanelAdmin(); // Recargar el panel
-            });
-        });
+        const pendientesDiv = document.getElementById('reservas-pendientes');
+        const confirmadasTbody = document.getElementById('reservas-confirmadas').querySelector('tbody');
         
-        document.querySelectorAll('.btn-rechazar').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.getAttribute('data-id'));
-                if(confirm('¿Seguro que quieres rechazar este turno? (Se eliminará)')) {
-                    // En este caso, al ser un ejemplo simple, lo eliminaremos para sacarlo de la vista Pendiente
-                    const reservas = obtenerReservas().filter(res => res.id !== id);
-                    guardarReservas(reservas);
-                    cargarPanelAdmin();
-                }
-            });
-        });
-    }
+        if (!pendientesDiv || !confirmadasTbody) return; 
 
-    // 2. Renderizar Confirmadas
-    if (confirmadas.length === 0) {
-        confirmadasTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay turnos confirmados aún.</td></tr>`;
-    } else {
-        confirmadas.forEach(reserva => {
-            const fila = confirmadasTbody.insertRow();
-            fila.insertCell().textContent = reserva.nombre;
-            fila.insertCell().textContent = reserva.telefono;
-            fila.insertCell().textContent = `${reserva.fecha} ${reserva.hora}`;
-            fila.insertCell().innerHTML = `<span class="estado-ocupado">Confirmado</span>`;
-        });
-    }
+        pendientesDiv.innerHTML = '';
+        confirmadasTbody.innerHTML = '';
+        
+        const pendientes = reservas.filter(res => res.estado === 'Pendiente');
+        const confirmadas = reservas.filter(res => res.estado === 'Confirmado');
+
+        // 1. Renderizar Pendientes
+        if (pendientes.length === 0) {
+            pendientesDiv.innerHTML = "<p>🥳 No hay turnos pendientes por aprobar.</p>";
+        } else {
+            pendientes.forEach(reserva => {
+                const card = document.createElement('div');
+                card.className = 'reservas-list';
+                card.innerHTML = `
+                    <p><strong>Cliente:</strong> ${reserva.nombre}</p>
+                    <p><strong>Teléfono:</strong> ${reserva.telefono}</p>
+                    <p><strong>Solicita:</strong> ${reserva.fecha} a las ${reserva.hora}</p>
+                    
+                    <form class="form-aprobacion" data-id="${reserva.id}">
+                        <div class="form-group">
+                            <label for="fecha-${reserva.id}">Fecha (Reasignar):</label>
+                            <input type="date" id="fecha-${reserva.id}" value="${reserva.fecha}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="hora-${reserva.id}">Hora (Reasignar):</label>
+                            <input type="time" id="hora-${reserva.id}" value="${reserva.hora}" required>
+                        </div>
+                        <button type="submit">✅ Confirmar Turno</button>
+                        <button type="button" class="btn-rechazar" data-id="${reserva.id}" 
+                                style="background-color: var(--color-marron);">❌ Rechazar/Eliminar</button>
+                    </form>
+                `;
+                pendientesDiv.appendChild(card);
+            });
+            
+            // 2. Agregar Event Listeners para Confirmar/Rechazar
+            document.querySelectorAll('.form-aprobacion').forEach(form => {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const id = form.getAttribute('data-id');
+                    const nuevaFecha = form.querySelector(`input[type="date"]`).value;
+                    const nuevaHora = form.querySelector(`input[type="time"]`).value;
+                    
+                    actualizarEstadoReserva(id, 'Confirmado', nuevaFecha, nuevaHora)
+                        .then(() => cargarPanelAdmin()); 
+                });
+            });
+            
+            document.querySelectorAll('.btn-rechazar').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    if(confirm('¿Seguro que quieres rechazar y ELIMINAR este turno?')) {
+                        // Elimina el documento de Firebase
+                        db.collection("reservas").doc(id).delete()
+                            .then(() => cargarPanelAdmin());
+                    }
+                });
+            });
+        }
+
+        // 3. Renderizar Confirmadas
+        if (confirmadas.length === 0) {
+            confirmadasTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay turnos confirmados aún.</td></tr>`;
+        } else {
+            confirmadas.forEach(reserva => {
+                const fila = confirmadasTbody.insertRow();
+                fila.insertCell().textContent = reserva.nombre;
+                fila.insertCell().textContent = reserva.telefono;
+                fila.insertCell().textContent = `${reserva.fecha} ${reserva.hora}`;
+                fila.insertCell().innerHTML = `<span class="estado-ocupado">Confirmado</span>`;
+            });
+        }
+    });
 }
-
-// Exportar funciones si se usa en un entorno de módulos. Aquí es simple, solo se declara.
