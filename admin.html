@@ -32,8 +32,9 @@
         </table>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
     <script>
         // TU CONFIGURACIÓN DE FIREBASE (¡AJUSTA ESTO!)
         const firebaseConfig = {
@@ -49,12 +50,12 @@
         const db = firebase.firestore();
     </script>
 
-    <script src="script.js"></script>
     <script>
         // Lógica de Autenticación Inmediata y Carga del Panel
         const CORRECT_PASSWORD = '1234'; // ¡CAMBIA ESTA CONTRASEÑA!
 
         function authenticate() {
+            // El resto de la función es correcto...
             let password = '';
             
             while (password !== CORRECT_PASSWORD) {
@@ -64,7 +65,6 @@
                 // Si cancela (password es null) o es incorrecta
                 if (password === null || password !== CORRECT_PASSWORD) {
                     alert("Contraseña incorrecta o acceso cancelado.");
-                    // Bloquea el contenido
                     document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta. Cierra esta ventana y vuelve a intentarlo.</p>';
                     return false;
                 }
@@ -74,10 +74,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             if (authenticate()) {
-                // Solo si la autenticación es exitosa, cargamos el panel.
+                // Solo si la autenticación es exitosa, se carga el panel y el script.
                 cargarPanelAdmin();
             }
         });
     </script>
+    
+    <script src="script.js"></script>
 </body>
 </html>
