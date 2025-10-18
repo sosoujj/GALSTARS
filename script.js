@@ -155,9 +155,9 @@ function cargarPanelAdmin() {
 
 // ... (código de pendientes antes) ...
 
-     // 3. Renderizar Confirmadas
+   // 3. Renderizar Confirmadas
         if (confirmadas.length === 0) {
-            // Importante: El colspan ahora es 5 (4 columnas de datos + 1 de Acciones)
+            // Importante: Colspan es 5 (4 columnas de datos + 1 de Acciones)
             confirmadasTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay turnos confirmados aún.</td></tr>`; 
         } else {
             confirmadas.forEach(reserva => {
@@ -167,20 +167,19 @@ function cargarPanelAdmin() {
                 fila.insertCell().textContent = `${reserva.fecha} ${reserva.hora}`;
                 fila.insertCell().innerHTML = `<span class="estado-ocupado">Confirmado</span>`;
                 
-                // NUEVO: Botón de Cancelar/Eliminar para turnos confirmados
+                // AHORA INCLUIMOS EL BOTÓN "❌ Cancelar" en cada fila
                 const cellAcciones = fila.insertCell();
-                // Usamos el código de la crucecita (❌) para que se vea más limpio
                 cellAcciones.innerHTML = `<button class="btn-eliminar-confirmado" data-id="${reserva.id}" style="padding: 5px 10px; background-color: var(--color-marron);">❌ Cancelar</button>`; 
             });
             
-            // NUEVO: Agregar Event Listener para eliminar confirmados
+            // AGREGAMOS EL EVENT LISTENER AQUÍ, DESPUÉS DE CREAR TODOS LOS BOTONES
             document.querySelectorAll('.btn-eliminar-confirmado').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
                     if(confirm('⚠️ ¿Seguro que quieres CANCELAR y ELIMINAR este turno CONFIRMADO? Esta acción es permanente.')) {
-                        // Llama al método de eliminación de Firebase
+                        // Elimina el documento de Firebase
                         db.collection("reservas").doc(id).delete()
-                            .then(() => cargarPanelAdmin()); // Recarga el panel para mostrar el cambio
+                            .then(() => cargarPanelAdmin()); // Recarga el panel
                     }
                 });
             });
@@ -188,5 +187,6 @@ function cargarPanelAdmin() {
     }); // Fin del obtenerReservas.then()
 }
 }
+
 
 
