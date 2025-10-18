@@ -120,13 +120,13 @@ function cargarPanelAdmin() {
                         </div>
                         <button type="submit">✅ Confirmar Turno</button>
                         <button type="button" class="btn-rechazar" data-id="${reserva.id}" 
-                                style="background-color: var(--color-marron);">❌ Rechazar/Eliminar</button>
+                                 style="background-color: var(--color-marron);">❌ Rechazar/Eliminar</button>
                     </form>
                 `;
                 pendientesDiv.appendChild(card);
             });
             
-            // 2. Agregar Event Listeners para Confirmar/Rechazar
+            // 2. Agregar Event Listeners para Confirmar/Rechazar (Pendientes)
             document.querySelectorAll('.form-aprobacion').forEach(form => {
                 form.addEventListener('submit', (e) => {
                     e.preventDefault();
@@ -151,13 +151,8 @@ function cargarPanelAdmin() {
             });
         }
 
-   // --- DENTRO DE function cargarPanelAdmin() en script.js ---
-
-// ... (código de pendientes antes) ...
-
-   // 3. Renderizar Confirmadas
+        // 3. Renderizar Confirmadas (CON BOTÓN DE CANCELAR/ELIMINAR)
         if (confirmadas.length === 0) {
-            // Importante: Colspan es 5 (4 columnas de datos + 1 de Acciones)
             confirmadasTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay turnos confirmados aún.</td></tr>`; 
         } else {
             confirmadas.forEach(reserva => {
@@ -167,17 +162,18 @@ function cargarPanelAdmin() {
                 fila.insertCell().textContent = `${reserva.fecha} ${reserva.hora}`;
                 fila.insertCell().innerHTML = `<span class="estado-ocupado">Confirmado</span>`;
                 
-                // AHORA INCLUIMOS EL BOTÓN "❌ Cancelar" en cada fila
+                // Celda de Acciones con el botón "❌ Cancelar"
                 const cellAcciones = fila.insertCell();
-                cellAcciones.innerHTML = `<button class="btn-eliminar-confirmado" data-id="${reserva.id}" style="padding: 5px 10px; background-color: var(--color-marron);">❌ Cancelar</button>`; 
+                cellAcciones.innerHTML = `<button class="btn-eliminar-confirmado" data-id="${reserva.id}" 
+                                            style="padding: 5px 10px; background-color: var(--color-marron);">❌ Cancelar</button>`; 
             });
             
-            // AGREGAMOS EL EVENT LISTENER AQUÍ, DESPUÉS DE CREAR TODOS LOS BOTONES
+            // Agregar Event Listener para eliminar confirmados
             document.querySelectorAll('.btn-eliminar-confirmado').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
                     if(confirm('⚠️ ¿Seguro que quieres CANCELAR y ELIMINAR este turno CONFIRMADO? Esta acción es permanente.')) {
-                        // Elimina el documento de Firebase
+                        // Llama al método de eliminación de Firebase
                         db.collection("reservas").doc(id).delete()
                             .then(() => cargarPanelAdmin()); // Recarga el panel
                     }
@@ -186,7 +182,62 @@ function cargarPanelAdmin() {
         }
     }); // Fin del obtenerReservas.then()
 }
-}
 
 
+// --- Lógica de Inicialización para el Usuario (index.html) ---
 
+// Mueve toda la lógica del formulario de index.html aquí.
+document.addEventListener('DOMContentLoaded', () => {
+    const formulario = document.getElementById('formulario-reserva');
+    
+    // Si encuentra el formulario, estamos en index.html y ejecutamos su lógica
+    if (formulario) { 
+        const fechaInput = document.getElementById('fecha');
+        const mensajeReserva = document.getElementById('mensaje-reserva');
+        
+        // 1. Validar que no se pueda elegir una fecha pasada
+        const hoy = new Date();
+        const fechaMinima = hoy.toISOString().split('T')[0];
+        fechaInput.setAttribute('min', fechaMinima);
+
+        // 2. Manejar el envío del formulario
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const horaSolicitada = document.getElementById('hora').value;
+            const horaInicio = '09:00';
+            const horaFin = '18:00';
+            
+            // VALIDACIÓN DE HORARIO (extra, aunque el input ya lo tiene)
+            if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
+                mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
+                mensajeReserva.style.color = 'var(--color-marron)';
+                return; 
+            }
+
+            const nuevaReserva = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                fecha: document.getElementById('fecha').value,
+                hora: horaSolicitada,
+                estado: 'Pendiente' // Estado inicial
+            };
+
+            // Añade la reserva a Firebase
+            agregarReserva(nuevaReserva).then(() => {
+                formulario.reset();
+                mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
+                mensajeReserva.style.color = 'var(--color-rosa-fuerte)';
+                mostrarDisponibilidad(); // Recarga la tabla de disponibilidad
+            }).catch(() => {
+                mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde.";
+                mensajeReserva.style.color = 'red';
+            });
+        });
+
+        // 3. Cargar disponibilidad al inicio
+        mostrarDisponibilidad();
+    }
+    // NOTA: Si no encuentra el formulario (estamos en admin.html), la función cargarPanelAdmin() es llamada
+    // por el script de autenticación en admin.html, no aquí.
+});
