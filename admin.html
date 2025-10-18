@@ -50,31 +50,16 @@
         const db = firebase.firestore();
     </script>
 
-    <script>
+ <script>
         // Lógica de Autenticación Inmediata y Carga del Panel
         const CORRECT_PASSWORD = '1234'; // ¡CAMBIA ESTA CONTRASEÑA!
-
-        function authenticate() {
-            // El resto de la función es correcto...
-            let password = '';
-            
-            while (password !== CORRECT_PASSWORD) {
-                // Solicita la contraseña
-                password = prompt("🔐 INGRESA LA CONTRASEÑA DE ADMINISTRADOR:");
-
-                // Si cancela (password es null) o es incorrecta
-                if (password === null || password !== CORRECT_PASSWORD) {
-                    alert("Contraseña incorrecta o acceso cancelado.");
-                    document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta. Cierra esta ventana y vuelve a intentarlo.</p>';
-                    return false;
-                }
-            }
-            return true;
+        // ... (El resto de la función authenticate() y el DOMContentLoaded) ...
+        function authenticate() { 
+            // ... (código de autenticación)
         }
-
         document.addEventListener('DOMContentLoaded', () => {
             if (authenticate()) {
-                // Solo si la autenticación es exitosa, se carga el panel y el script.
+                // Solo si la autenticación es exitosa, se carga el panel
                 cargarPanelAdmin();
             }
         });
@@ -83,5 +68,6 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
