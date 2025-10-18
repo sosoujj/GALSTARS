@@ -181,12 +181,12 @@ function cargarPanelAdmin() {
             });
         }
     }); // Fin del obtenerReservas.then()
-}
+} // <<-- Corregido: esta es la única llave de cierre de cargarPanelAdmin()
 
 
 // --- Lógica de Inicialización para el Usuario (index.html) ---
 
-// Mueve toda la lógica del formulario de index.html aquí.
+// Mueve toda la lógica del formulario de index.html aquí para que siempre se ejecute si existe el formulario.
 document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById('formulario-reserva');
     
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const horaInicio = '09:00';
             const horaFin = '18:00';
             
-            // VALIDACIÓN DE HORARIO (extra, aunque el input ya lo tiene)
+            // VALIDACIÓN DE HORARIO
             if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
                 mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
                 mensajeReserva.style.color = 'var(--color-marron)';
@@ -229,8 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
                 mensajeReserva.style.color = 'var(--color-rosa-fuerte)';
                 mostrarDisponibilidad(); // Recarga la tabla de disponibilidad
-            }).catch(() => {
-                mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde.";
+            }).catch((error) => {
+                // Muestra un error detallado en consola, pero un error simple al usuario.
+                console.error("Error al enviar la reserva a Firestore:", error); 
+                mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde o revisa tu conexión.";
                 mensajeReserva.style.color = 'red';
             });
         });
@@ -238,6 +240,4 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Cargar disponibilidad al inicio
         mostrarDisponibilidad();
     }
-    // NOTA: Si no encuentra el formulario (estamos en admin.html), la función cargarPanelAdmin() es llamada
-    // por el script de autenticación en admin.html, no aquí.
 });
