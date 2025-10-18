@@ -57,55 +57,58 @@
 
     <script src="script.js"></script>
     <script>
-        // Lógica específica del Usuario
-        document.addEventListener('DOMContentLoaded', () => {
-            const formulario = document.getElementById('formulario-reserva');
-            const fechaInput = document.getElementById('fecha');
-            const mensajeReserva = document.getElementById('mensaje-reserva');
+      // --- Lógica de Inicialización para el Usuario (index.html) ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Verificamos si existe el formulario para saber si estamos en index.html
+    const formulario = document.getElementById('formulario-reserva');
+    
+    if (formulario) { 
+        const fechaInput = document.getElementById('fecha');
+        const mensajeReserva = document.getElementById('mensaje-reserva');
+        
+        // 1. Validar que no se pueda elegir una fecha pasada
+        const hoy = new Date();
+        const fechaMinima = hoy.toISOString().split('T')[0];
+        fechaInput.setAttribute('min', fechaMinima);
+
+        // 2. Manejar el envío del formulario
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
             
-            // 1. Validar que no se pueda elegir una fecha pasada (Ayer)
-            const hoy = new Date();
-            const fechaMinima = hoy.toISOString().split('T')[0];
-            fechaInput.setAttribute('min', fechaMinima);
+            const horaSolicitada = document.getElementById('hora').value;
+            const horaInicio = '09:00';
+            const horaFin = '18:00';
+            
+            // VALIDACIÓN DE HORARIO
+            if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
+                mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
+                mensajeReserva.style.color = 'var(--color-marron)';
+                return; 
+            }
 
-            // 2. Manejar el envío del formulario
-            formulario.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const horaSolicitada = document.getElementById('hora').value;
-                const horaInicio = '09:00';
-                const horaFin = '18:00';
-                
-                // VALIDACIÓN DE HORARIO
-                if (horaSolicitada < horaInicio || horaSolicitada > horaFin) {
-                    mensajeReserva.textContent = `❌ Lo sentimos, solo se puede reservar entre las ${horaInicio} y las ${horaFin}.`;
-                    mensajeReserva.style.color = 'var(--color-marron)';
-                    return; 
-                }
+            const nuevaReserva = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                fecha: document.getElementById('fecha').value,
+                hora: horaSolicitada,
+                estado: 'Pendiente' // Estado inicial
+            };
 
-                const nuevaReserva = {
-                    nombre: document.getElementById('nombre').value,
-                    telefono: document.getElementById('telefono').value,
-                    fecha: document.getElementById('fecha').value,
-                    hora: horaSolicitada,
-                    estado: 'Pendiente' // Estado inicial
-                };
-
-                // Añade la reserva a Firebase
-                agregarReserva(nuevaReserva).then(() => {
-                    formulario.reset();
-                    mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
-                    mensajeReserva.style.color = 'var(--color-rosa-fuerte)';
-                    mostrarDisponibilidad();
-                }).catch(() => {
-                    mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde.";
-                    mensajeReserva.style.color = 'red';
-                });
+            // Añade la reserva a Firebase
+            agregarReserva(nuevaReserva).then(() => {
+                formulario.reset();
+                mensajeReserva.textContent = "✅ Tu solicitud ha sido enviada. Espera la confirmación del dueño.";
+                mensajeReserva.style.color = 'var(--color-rosa-fuerte)';
+                mostrarDisponibilidad();
+            }).catch(() => {
+                mensajeReserva.textContent = "🚨 Error al enviar la reserva. Intenta de nuevo más tarde.";
+                mensajeReserva.style.color = 'red';
             });
-
-            // 3. Cargar disponibilidad al inicio
-            mostrarDisponibilidad();
         });
-    </script>
-</body>
-</html>
+
+        // 3. Cargar disponibilidad al inicio
+        mostrarDisponibilidad();
+    }
+});
+
