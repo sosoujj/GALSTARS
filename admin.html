@@ -17,7 +17,7 @@
         
         <hr/>
         
-     <h2>Turnos Confirmados</h2>
+        <h2>Turnos Confirmados</h2>
         <table id="reservas-confirmadas">
             <thead>
                 <tr>
@@ -32,11 +32,11 @@
         </table>
     </div>
 
-   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <script>
-        // TU CONFIGURACIÓN DE FIREBASE (¡AJUSTA ESTO!)
+        // TU CONFIGURACIÓN DE FIREBASE (¡MANTÉN ESTO!)
         const firebaseConfig = {
             apiKey: "AIzaSyCNQm2jgb54xKYYHk64bXO648NdWm1MZTY",
             authDomain: "galstars-b9eed.firebaseapp.com",
@@ -50,16 +50,31 @@
         const db = firebase.firestore();
     </script>
 
- <script>
+    <script>
         // Lógica de Autenticación Inmediata y Carga del Panel
-        const CORRECT_PASSWORD = '1234'; // ¡CAMBIA ESTA CONTRASEÑA!
-        // ... (El resto de la función authenticate() y el DOMContentLoaded) ...
-        function authenticate() { 
-            // ... (código de autenticación)
+        const CORRECT_PASSWORD = '1234'; // ¡IMPORTANTE! CAMBIA ESTA CONTRASEÑA
+
+        function authenticate() {
+            let password = '';
+            
+            while (password !== CORRECT_PASSWORD) {
+                // Solicita la contraseña
+                password = prompt("🔐 INGRESA LA CONTRASEÑA DE ADMINISTRADOR:");
+
+                // Si cancela (password es null) o es incorrecta
+                if (password === null || password !== CORRECT_PASSWORD) {
+                    alert("Contraseña incorrecta o acceso cancelado.");
+                    // Bloquea el contenido
+                    document.body.innerHTML = '<h1>Acceso Denegado</h1><p>Contraseña incorrecta. Cierra esta ventana y vuelve a intentarlo.</p>';
+                    return false;
+                }
+            }
+            return true;
         }
+
         document.addEventListener('DOMContentLoaded', () => {
             if (authenticate()) {
-                // Solo si la autenticación es exitosa, se carga el panel
+                // Solo si la autenticación es exitosa, se llama a la función de carga
                 cargarPanelAdmin();
             }
         });
@@ -68,6 +83,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
